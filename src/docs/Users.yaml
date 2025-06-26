@@ -1,0 +1,100 @@
+paths:
+  /api/users:
+    get:
+      summary: Obtiene todos los usuarios.
+      tags:
+        - Users
+      responses:
+        "200":
+          description: Un arreglo de todos los usuarios registrados.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        "403":
+          description: Acceso denegado. Solo para administradores.
+
+  /api/users/{uid}:
+    get:
+      summary: Obtiene un usuario por su ID.
+      tags:
+        - Users
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: ID del usuario a buscar.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Datos del usuario solicitado.
+        "404":
+          description: Usuario no encontrado.
+          
+  /api/users/{uid}/documents:
+    post:
+      summary: Sube documentos para un usuario.
+      tags:
+        - Users
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: ID del usuario al que se le subirán los documentos.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                documents:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "200":
+          description: Documentos subidos exitosamente.
+        "400":
+          description: No se subieron archivos.
+        "404":
+          description: Usuario no encontrado.
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: ID autogenerado por MongoDB.
+        first_name:
+          type: string
+          description: Nombre del usuario.
+        last_name:
+          type: string
+          description: Apellido del usuario.
+        email:
+          type: string
+          description: Email del usuario.
+        role:
+          type: string
+          description: Rol del usuario (user o admin).
+        documents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              reference:
+                type: string
+        last_connection:
+          type: string
+          format: date-time

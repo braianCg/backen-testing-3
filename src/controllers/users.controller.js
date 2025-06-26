@@ -27,9 +27,32 @@ const deleteUser = async(req,res) =>{
     res.send({status:"success",message:"User deleted"})
 }
 
+const uploadDocuments = async (req, res) => {
+    const { uid } = req.params;
+    const files = req.files;
+
+    if (!files || files.length === 0) {
+        return res.status(400).send({ status: 'error', error: 'No se subieron archivos.' });
+    }
+
+    const user = await usersService.getUserById(uid);
+    if (!user) return res.status(404).send({ status: 'error', error: 'Usuario no encontrado.' });
+
+    const newDocuments = files.map(file => ({
+        name: file.originalname,
+        reference: file.path
+    }));
+
+    user.documents.push(...newDocuments);
+    await usersService.update(uid, { documents: user.documents });
+
+    res.send({ status: 'success', message: 'Documentos subidos exitosamente.' });
+};
+
 export default {
     deleteUser,
     getAllUsers,
     getUser,
-    updateUser
+    updateUser,
+    uploadDocuments 
 }

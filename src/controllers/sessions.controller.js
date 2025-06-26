@@ -17,10 +17,11 @@ const register = async (req, res) => {
             password: hashedPassword
         }
         let result = await usersService.create(user);
-        console.log(result);
+        req.logger.info(`Usuario creado con ID: ${result._id}`);
         res.send({ status: "success", payload: result._id });
     } catch (error) {
-
+        req.logger.error(`Error al crear usuario: ${error.message}`);
+        res.status(500).send({ status: "error", error: "Error al crear usuario" });
     }
 }
 
@@ -28,13 +29,31 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).send({ status: "error", error: "Incomplete values" });
     const user = await usersService.getUserByEmail(email);
-    if(!user) return res.status(404).send({status:"error",error:"User doesn't exist"});
-    const isValidPassword = await passwordValidation(user,password);
-    if(!isValidPassword) return res.status(400).send({status:"error",error:"Incorrect password"});
+    if (!user) return res.status(404).send({ status: "error", error: "User doesn't exist" });
+    const isValidPassword = await passwordValidation(user, password);
+    if (!isValidPassword) return res.status(400).send({ status: "error", error: "Incorrect password" });
+
+    // Actualizamos la última conexión
+    user.last_connection = new Date();
+    await usersService.update(user._id, user);
+
     const userDto = UserDTO.getUserTokenFrom(user);
-    const token = jwt.sign(userDto,'tokenSecretJWT',{expiresIn:"1h"});
-    res.cookie('coderCookie',token,{maxAge:3600000}).send({status:"success",message:"Logged in"})
-}
+    const token = jwt.sign(userDto, 'tokenSecretJWT', { expiresIn: "1h" });
+    res.cookie('coderCookie', token, { maxAge: 3600000 }).send({ status: "success", message: "Logged in" });
+};
+
+const logout = async (req, res) => {
+    const cookie = req.cookies['coderCookie'];
+    if (cookie) {
+        const decodedUser = jwt.verify(cookie, 'tokenSecretJWT');
+        const user = await usersService.getUserByEmail(decodedUser.email);
+        if (user) {
+            user.last_connection = new Date();
+            await usersService.update(user._id, user);
+        }
+    }
+    res.clearCookie('coderCookie').send({ status: "success", message: "Logged out" });
+};
 
 const current = async(req,res) =>{
     const cookie = req.cookies['coderCookie']
@@ -62,6 +81,7 @@ const unprotectedCurrent = async(req,res)=>{
 export default {
     current,
     login,
+    logout,
     register,
     current,
     unprotectedLogin,

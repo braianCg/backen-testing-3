@@ -1,0 +1,32 @@
+paths:
+  /api/pets:
+    get:
+      summary: Obtiene todas las mascotas.
+      tags:
+        - Pets
+      responses:
+        "200":
+          description: Un arreglo de mascotas.
+    post:
+      summary: Crea una nueva mascota.
+      tags:
+        - Pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                specie:
+                  type: string
+                birthDate:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Mascota creada exitosamente.
+        "400":
+          description: Valores incompletos.

@@ -1,6 +1,7 @@
 import PetDTO from "../dto/Pet.dto.js";
 import { petsService } from "../services/index.js"
 import __dirname from "../utils/index.js";
+import { generatePet } from "../utils/mocks.js";
 
 const getAllPets = async(req,res)=>{
     const pets = await petsService.getAll();
@@ -43,10 +44,19 @@ const createPetWithImage = async(req,res) =>{
     const result = await petsService.create(pet);
     res.send({status:"success",payload:result})
 }
+const getMockingPets = (req, res) => {
+    const pets = [];
+    for (let i = 0; i < 100; i++) {
+        pets.push(generatePet());
+    }
+    res.send({ status: "success", payload: pets });
+};
+
 export default {
     getAllPets,
     createPet,
     updatePet,
     deletePet,
-    createPetWithImage
+    createPetWithImage,
+    getMockingPets
 }
